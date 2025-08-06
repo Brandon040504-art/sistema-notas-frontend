@@ -6,7 +6,7 @@ const estilos = {
     maxWidth: '900px',
     margin: '40px auto',
     padding: '20px',
-    backgroundColor: '#fff',
+    backgroundColor: '#fdfdfd',
     borderRadius: '12px',
     boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
@@ -14,13 +14,15 @@ const estilos = {
   titulo: {
     textAlign: 'center',
     marginBottom: '24px',
-    color: '#2c3e50'
+    color: '#2c3e50',
+    fontSize: '28px'
   },
   formulario: {
     display: 'flex',
     gap: '10px',
     marginBottom: '20px',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    flexWrap: 'wrap'
   },
   input: {
     padding: '8px',
@@ -54,6 +56,12 @@ const estilos = {
     padding: '12px',
     textAlign: 'center',
     borderBottom: '1px solid #ddd'
+  },
+  notaForm: {
+    display: 'flex',
+    gap: '10px',
+    marginTop: '10px',
+    justifyContent: 'center'
   }
 };
 
@@ -61,6 +69,9 @@ function Estudiantes() {
   const [estudiantes, setEstudiantes] = useState([]);
   const [nombre, setNombre] = useState('');
   const [matricula, setMatricula] = useState('');
+  const [nota, setNota] = useState('');
+  const [materia, setMateria] = useState('');
+  const [idSeleccionado, setIdSeleccionado] = useState('');
 
   const obtenerEstudiantes = async () => {
     try {
@@ -88,6 +99,22 @@ function Estudiantes() {
     }
   };
 
+  const agregarNota = async () => {
+    if (!nota || !materia || !idSeleccionado) return alert('Completa los campos de nota');
+    try {
+      await axios.post(`https://sistema-notas-backend.onrender.com/api/estudiantes/${idSeleccionado}/notas`, {
+        materia,
+        calificacion: parseFloat(nota)
+      });
+      setNota('');
+      setMateria('');
+      setIdSeleccionado('');
+      obtenerEstudiantes();
+    } catch (err) {
+      console.error('Error al agregar nota:', err);
+    }
+  };
+
   useEffect(() => {
     obtenerEstudiantes();
   }, []);
@@ -111,7 +138,7 @@ function Estudiantes() {
           onChange={e => setMatricula(e.target.value)}
           style={estilos.input}
         />
-        <button onClick={agregarEstudiante} style={estilos.boton}>Agregar</button>
+        <button onClick={agregarEstudiante} style={estilos.boton}>Agregar Estudiante</button>
       </div>
 
       <table style={estilos.tabla}>
@@ -132,9 +159,44 @@ function Estudiantes() {
                 {est.notas?.map((nota, i) => (
                   <div key={i}>{nota.materia}: {nota.calificacion}</div>
                 ))}
+
+                {/* Formulario para agregar nota */}
+                <div style={estilos.notaForm}>
+                  <input
+                    type="text"
+                    placeholder="Materia"
+                    value={idSeleccionado === est._id ? materia : ''}
+                    onChange={e => {
+                      setIdSeleccionado(est._id);
+                      setMateria(e.target.value);
+                    }}
+                    style={estilos.input}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Calificación"
+                    value={idSeleccionado === est._id ? nota : ''}
+                    onChange={e => {
+                      setIdSeleccionado(est._id);
+                      setNota(e.target.value);
+                    }}
+                    style={estilos.input}
+                  />
+                  <button
+                    style={estilos.boton}
+                    onClick={agregarNota}
+                  >
+                    +
+                  </button>
+                </div>
               </td>
               <td style={estilos.thtd}>
-                <button style={estilos.botonEliminar} onClick={() => eliminarEstudiante(est._id)}>🗑️</button>
+                <button
+                  style={estilos.botonEliminar}
+                  onClick={() => eliminarEstudiante(est._id)}
+                >
+                  🗑️
+                </button>
               </td>
             </tr>
           ))}
